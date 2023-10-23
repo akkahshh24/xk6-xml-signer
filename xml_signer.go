@@ -1,4 +1,4 @@
-// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@latest
+// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v0.0.1
 
 package xmlsigner
 
