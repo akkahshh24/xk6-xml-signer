@@ -1,3 +1,5 @@
+// xk6 build --with github.com/akkahshh24/xk6-xml-signer@latest
+
 package xmlsigner
 
 import (
@@ -22,7 +24,7 @@ type XmlSigner struct {
 	// TxnId      string
 }
 
-func GetPrivateKeyAndCert(p12FilePath, password string) (crypto.Signer, []byte) {
+func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) (crypto.Signer, []byte) {
 	p12Bytes, err := os.ReadFile(p12FilePath)
 	if err != nil {
 		log.Fatalf("failed to read .p12 file: %v", err)
