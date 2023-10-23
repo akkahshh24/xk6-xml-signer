@@ -20,7 +20,7 @@ type XmlSigner struct {
 	// TxnId     string
 }
 
-func GetPrivateKeyAndCert(p12FilePath, password string) (crypto.Signer, []byte, error) {
+func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) (crypto.Signer, []byte, error) {
 	p12Bytes, err := os.ReadFile(p12FilePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to read .p12 file: %v", err)
