@@ -7,8 +7,13 @@ import (
 	"fmt"
 	"os"
 
+	"go.k6.io/k6/js/modules"
 	"golang.org/x/crypto/pkcs12"
 )
+
+func init() {
+	modules.Register("k6/x/xmlsigner", new(XmlSigner))
+}
 
 type XmlSigner struct {
 	// SignedXml string
