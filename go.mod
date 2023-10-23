@@ -8,6 +8,15 @@ require (
 )
 
 require (
+	github.com/jonboulle/clockwork v0.4.0 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/onsi/gomega v1.28.1 // indirect
+)
+
+require (
+	github.com/akkahshh24/go-xml-signer v0.0.0-20231022073429-b2bd343a3f7f
+	github.com/beevik/etree v1.2.0
+	github.com/brianvoe/gofakeit/v6 v6.24.0
 	github.com/dlclark/regexp2 v1.9.0 // indirect
 	github.com/dop251/goja v0.0.0-20230919151941-fc55792775de // indirect
 	github.com/fatih/color v1.15.0 // indirect
