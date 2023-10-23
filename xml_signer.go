@@ -16,13 +16,13 @@ func init() {
 }
 
 type XmlSigner struct {
-	PrivateKey crypto.Signer
-	CertBytes  []byte
-	SignedXml  string
-	TxnId      string
+	// PrivateKey crypto.Signer
+	// CertBytes  []byte
+	// SignedXml  string
+	// TxnId      string
 }
 
-func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) {
+func GetPrivateKeyAndCert(p12FilePath, password string) (crypto.Signer, []byte) {
 	p12Bytes, err := os.ReadFile(p12FilePath)
 	if err != nil {
 		log.Fatalf("failed to read .p12 file: %v", err)
@@ -47,8 +47,7 @@ func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) {
 
 	certPEMBytes := pem.EncodeToMemory(certPEM)
 
-	x.PrivateKey = signer
-	x.CertBytes = certPEMBytes
+	return signer, certPEMBytes
 }
 
 // func (x *XmlSigner) GetSignedXmlAndTxnId(signer crypto.Signer, cert []byte, payloadStr string) (string, string, error) {
