@@ -1,4 +1,6 @@
-// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v0.0.1
+// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v
+// with dashbaord
+// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v0.0.8 --with github.com/grafana/xk6-dashboard@latest --output k6-xmlsigner-dashboard-2
 
 package xmlsigner
 
@@ -111,6 +113,7 @@ func (x *XmlSigner) GetSignedXml() {
 		log.Fatalf("failed to sign payload: %v", err)
 	}
 
+	log.Println(signedElement)
 	signedElement.SelectElement("Modulus").SetText(x.Modulus)
 	signedElement.SelectElement("Exponent").SetText(x.Exponent)
 	x.PayloadDocument.SetRoot(signedElement)
