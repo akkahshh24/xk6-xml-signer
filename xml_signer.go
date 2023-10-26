@@ -36,6 +36,7 @@ type XmlSigner struct {
 	Exponent        string
 }
 
+// TODO: make it more efficient
 func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) {
 	p12Bytes, err := os.ReadFile(p12FilePath)
 	if err != nil {
@@ -113,9 +114,8 @@ func (x *XmlSigner) GetSignedXml() {
 		log.Fatalf("failed to sign payload: %v", err)
 	}
 
-	log.Println(signedElement)
-	signedElement.SelectElement("Modulus").SetText(x.Modulus)
-	signedElement.SelectElement("Exponent").SetText(x.Exponent)
+	signedElement.SelectElement("Signature").SelectElement("KeyInfo").SelectElement("KeyValue").SelectElement("RSAKeyValue").SelectElement("Modulus").SetText(x.Modulus)
+	signedElement.SelectElement("Signature").SelectElement("KeyInfo").SelectElement("KeyValue").SelectElement("RSAKeyValue").SelectElement("Exponent").SetText(x.Exponent)
 	x.PayloadDocument.SetRoot(signedElement)
 
 	str, err := x.PayloadDocument.WriteToString()
