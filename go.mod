@@ -14,7 +14,6 @@ require (
 )
 
 require (
-	github.com/akkahshh24/go-xml-signer v0.0.0-20231022073429-b2bd343a3f7f
 	github.com/beevik/etree v1.2.0
 	github.com/brianvoe/gofakeit/v6 v6.24.0
 	github.com/dlclark/regexp2 v1.9.0 // indirect
@@ -27,6 +26,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mstoykov/atlas v0.0.0-20220811071828-388f114305dd // indirect
+	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.1.2 // indirect

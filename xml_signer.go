@@ -1,23 +1,15 @@
-// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v
-// with dashbaord
-// xk6 build latest --with github.com/akkahshh24/xk6-xml-signer@v0.0.8 --with github.com/grafana/xk6-dashboard@latest --output k6-xmlsigner-dashboard-2
-
 package xmlsigner
 
 import (
 	"crypto"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
 	"log"
-	"math/big"
 	"os"
 	"time"
 
-	dsig "github.com/akkahshh24/go-xml-signer"
 	"github.com/beevik/etree"
 	"github.com/brianvoe/gofakeit/v6"
+	dsig "github.com/russellhaering/goxmldsig"
 	"go.k6.io/k6/js/modules"
 	"golang.org/x/crypto/pkcs12"
 )
@@ -27,16 +19,10 @@ func init() {
 }
 
 type XmlSigner struct {
-	PrivateKey      crypto.Signer
-	CertBytes       []byte
-	PayloadDocument *etree.Document
-	SignedXml       string
-	TxnId           string
-	Modulus         string
-	Exponent        string
+	PrivateKey crypto.Signer
+	CertBytes  []byte
 }
 
-// TODO: make it more efficient
 func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) {
 	p12Bytes, err := os.ReadFile(p12FilePath)
 	if err != nil {
@@ -55,73 +41,37 @@ func (x *XmlSigner) GetPrivateKeyAndCert(p12FilePath, password string) {
 
 	signer := crypto.Signer(rsaPrivateKey)
 
-	certPEM := &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: cert.Raw,
-	}
-
-	certPEMBytes := pem.EncodeToMemory(certPEM)
-
 	x.PrivateKey = signer
-	x.CertBytes = certPEMBytes
-
-	// Decode the PEM data
-	block, _ := pem.Decode(certPEMBytes)
-	if block == nil {
-		log.Fatalf("failed to decode PEM block")
-	}
-
-	// Parse the certificate
-	certificate, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		log.Fatalf("failed to parse certificate: %v", err)
-	}
-
-	// Check if the certificate contains an RSA public key
-	rsaPublicKey, ok := certificate.PublicKey.(*rsa.PublicKey)
-	if !ok {
-		log.Fatalf("certificate does not contain an RSA public key")
-	}
-
-	modulusValue := new(big.Int).SetBytes(rsaPublicKey.N.Bytes())
-	exponentValue := big.NewInt(int64(rsaPublicKey.E))
-
-	x.Modulus = base64.StdEncoding.EncodeToString(modulusValue.Bytes())
-	x.Exponent = base64.StdEncoding.EncodeToString(exponentValue.Bytes())
+	x.CertBytes = cert.Raw
 }
 
-func (x *XmlSigner) GetPayloadDocument(payload string) {
+func (x *XmlSigner) GetSignedXml(payload string) (string, string) {
+
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(payload); err != nil {
-		log.Fatalf("failed to create doc from string: %v", err)
+		panic(err)
 	}
-	x.PayloadDocument = doc
-}
 
-func (x *XmlSigner) GetSignedXml() {
-
-	x.PayloadDocument.Root().SelectElement("Head").SelectAttr("msgId").Value = gofakeit.Regex(`^[a-zA-Z0-9]{35}$`)
-	x.PayloadDocument.Root().SelectElement("Head").SelectAttr("ts").Value = time.Now().Format("2006-01-02T15:04:05.000-07:00")
-	x.PayloadDocument.Root().SelectElement("Txn").SelectAttr("custRef").Value = gofakeit.Regex(`^[0-9]{12}$`)
-	x.TxnId = gofakeit.Regex(`^[a-zA-Z0-9]{35}$`)
-	x.PayloadDocument.Root().SelectElement("Txn").SelectAttr("id").Value = x.TxnId
-	x.PayloadDocument.Root().SelectElement("Txn").SelectAttr("refId").Value = gofakeit.Regex(`^[0-9]{6}$`)
-	x.PayloadDocument.Root().SelectElement("Txn").SelectAttr("ts").Value = time.Now().Format("2006-01-02T15:04:05.000-07:00")
+	doc.Root().SelectElement("Head").SelectAttr("msgId").Value = gofakeit.Regex(`^[a-zA-Z0-9]{35}$`)
+	doc.Root().SelectElement("Head").SelectAttr("ts").Value = time.Now().Format("2006-01-02T15:04:05.000-07:00")
+	doc.Root().SelectElement("Txn").SelectAttr("custRef").Value = gofakeit.Regex(`^[0-9]{12}$`)
+	txnId := gofakeit.Regex(`^[a-zA-Z0-9]{35}$`)
+	doc.Root().SelectElement("Txn").SelectAttr("id").Value = txnId
+	doc.Root().SelectElement("Txn").SelectAttr("refId").Value = gofakeit.Regex(`^[0-9]{6}$`)
+	doc.Root().SelectElement("Txn").SelectAttr("ts").Value = time.Now().Format("2006-01-02T15:04:05.000-07:00")
 
 	ctx, _ := dsig.NewSigningContext(x.PrivateKey, [][]byte{x.CertBytes})
-	signedElement, err := ctx.SignEnveloped(x.PayloadDocument.Root())
+	signedElement, err := ctx.SignEnveloped(doc.Root())
 	if err != nil {
 		log.Fatalf("failed to sign payload: %v", err)
 	}
 
-	signedElement.SelectElement("Signature").SelectElement("KeyInfo").SelectElement("KeyValue").SelectElement("RSAKeyValue").SelectElement("Modulus").SetText(x.Modulus)
-	signedElement.SelectElement("Signature").SelectElement("KeyInfo").SelectElement("KeyValue").SelectElement("RSAKeyValue").SelectElement("Exponent").SetText(x.Exponent)
-	x.PayloadDocument.SetRoot(signedElement)
+	doc.SetRoot(signedElement)
 
-	str, err := x.PayloadDocument.WriteToString()
+	str, err := doc.WriteToString()
 	if err != nil {
 		log.Fatalf("failed to write payload to string: %v", err)
 	}
 
-	x.SignedXml = str
+	return str, txnId
 }
